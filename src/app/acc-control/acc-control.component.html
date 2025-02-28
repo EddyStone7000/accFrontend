@@ -8,7 +8,7 @@
 
       <!-- Straßenanimation -->
       <div class="road-container">
-        <div class="road">
+        <div class="road" [class.active]="isRunning">
           <div id="lead-car" class="car lead-car"></div>
           <div id="ego-car" class="car ego-car"></div>
         </div>

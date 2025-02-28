@@ -50,6 +50,41 @@
   position: relative;
   border-left: 2px dashed #fff;
   border-right: 2px dashed #fff;
+  overflow: hidden;
+}
+
+/* Erste bewegte Linie */
+.road.active::before {
+  content: '';
+  position: absolute;
+  left: 5%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 200px;
+  background-color: white;
+  animation: moveLine 0.8s linear infinite;
+}
+
+/* Zweite bewegte Linie, zeitlich versetzt */
+.road.active::after {
+  content: '';
+  position: absolute;
+  left: 5%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 200px;
+  background-color: white;
+  animation: moveLine 0.8s linear infinite;
+  animation-delay: 0.4s;
+}
+
+@keyframes moveLine {
+  0% {
+    top: -200px;
+  }
+  100% {
+    top: 400px;
+  }
 }
 
 .car {
