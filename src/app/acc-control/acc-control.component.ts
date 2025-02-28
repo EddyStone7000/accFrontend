@@ -162,7 +162,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
   }
 
   isDistanceOptimal(): boolean {
-    return this.simulationData.distance >= 6.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
+    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
   }
 
   isDistanceCritical(): boolean {
