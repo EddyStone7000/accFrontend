@@ -6,8 +6,9 @@
       <h5 class="card-title">ACC Steuerung</h5>
 
       <!-- Straßenanimation -->
-      <div class="road-container" [class.rain]="simulationData.weatherCondition === 'Rain'">
-        <div class="road" [class.active]="isRunning">
+      <div class="road-container">
+        <div class="road" [class.active]="isRunning" [class.rain]="isRainActive || simulationData.weatherCondition === 'Rain'">
+          <div class="rain-layer"></div>
           <div id="lead-car" class="car lead-car"></div>
           <div id="ego-car" class="car ego-car"></div>
         </div>
