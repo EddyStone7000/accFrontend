@@ -13,6 +13,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
   isRunning: boolean = false;
   isWeatherOn: boolean = false;
   isAdjusting: boolean = false;
+  isRainActive: boolean = false; // Steuert Regen-Simulation und Animation
   simulationData: SimulationData = { 
     egoSpeed: 0, 
     leadSpeed: 0, 
@@ -45,6 +46,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
           this.status = 'Simulation ist aus';
           this.isRunning = false;
           this.isAdjusting = false;
+          this.isRainActive = false; // Regen wird ausgeschaltet
           this.adjustmentMessage = '';
           this.stopSimulation();
           this.resetCarPositions();
@@ -116,15 +118,12 @@ export class AccControlComponent implements OnInit, OnDestroy {
   }
 
   toggleRain(): void {
-    this.isWeatherOn = true;
-    this.isAdjusting = true;
-    this.simulationData.weatherCondition = "Rain";
-    this.simulationData.weatherIcon = "10d";
-    console.log("Rain aktiviert - Weather: " + this.simulationData.weatherCondition); // Debugging
-    this.accService.toggleWeather(true).subscribe(
+    this.isRainActive = !this.isRainActive; // Toggle Regen-Simulation
+    this.accService.toggleRain(this.isRainActive).subscribe(
       (data: SimulationData) => {
         this.simulationData = data;
-        console.log("Nach Backend - Weather: " + this.simulationData.weatherCondition); // Debugging
+        this.adjustmentMessage = this.isRainActive ? 'Regen simuliert' : 'Regen aus';
+        console.log("Rain Active: " + this.isRainActive); // Debugging
         this.updateCarPositions();
       },
       error => {
@@ -135,6 +134,8 @@ export class AccControlComponent implements OnInit, OnDestroy {
     );
   }
 
+
+
   startSimulation(): void {
     this.simulationSubscription = interval(100)
       .pipe(switchMap(() => this.accService.runSimulation(0.1)))
@@ -142,7 +143,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
         data => {
           this.simulationData = data;
           if (this.adjustmentMessage && data.distance >= 6.0 && data.distance <= 8.0 && this.isAdjusting && 
-              !(this.isWeatherOn && this.simulationData.weatherCondition === "Rain")) {
+              !this.isRainActive) {
             this.adjustmentMessage = 'Abstand stabil gehalten';
           }
           if (this.isAdjusting) {
@@ -161,16 +162,15 @@ export class AccControlComponent implements OnInit, OnDestroy {
   }
 
   isDistanceOptimal(): boolean {
-    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
+    return this.simulationData.distance >= 6.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
   }
 
   isDistanceCritical(): boolean {
     return this.simulationData && this.simulationData.distance < 4.5 && this.simulationData.distance !== 0; // Rot
   }
 
-  isDistanceRainOptimal(): boolean { // Blau bei Regen, neuer Bereich 15–18 Meter
-    return this.isWeatherOn && this.simulationData.weatherCondition === "Rain" && 
-           this.simulationData.distance >= 15.0 && this.simulationData.distance <= 18.0;
+  isDistanceRainOptimal(): boolean { // Blau bei Regen-Simulation
+    return this.isRainActive && this.simulationData.distance >= 9.0 && this.simulationData.distance <= 11.0; // 10 Meter ± 1
   }
 
   ngOnDestroy(): void {
