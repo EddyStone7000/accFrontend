@@ -13,27 +13,24 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
-.ml-2 {
-  margin-left: 8px;
-}
-
-.ico{
-  width: 30px; 
-  height: 30px; 
-  vertical-align: middle; 
-
+.ico {
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
   padding: 2px;
   border-radius: 4px;
   margin-right: 8px;
-  
 }
 
-.sim{
+.sim {
   text-align: justify;
   font-size: 0.9em;
 }
 
-/* Straßenanimation */
+.ml-2 {
+  margin-left: 8px;
+}
+
 .road-container {
   width: 100%;
   height: 400px;
@@ -53,7 +50,7 @@
   overflow: hidden;
 }
 
-/* Erste bewegte Linie */
+/* Erste bewegte Straßenlinie */
 .road.active::before {
   content: '';
   position: absolute;
@@ -63,9 +60,10 @@
   height: 200px;
   background-color: white;
   animation: moveLine 0.8s linear infinite;
+  z-index: 1; /* Unter Regen */
 }
 
-/* Zweite bewegte Linie, zeitlich versetzt */
+/* Zweite bewegte Straßenlinie */
 .road.active::after {
   content: '';
   position: absolute;
@@ -76,6 +74,7 @@
   background-color: white;
   animation: moveLine 0.8s linear infinite;
   animation-delay: 0.4s;
+  z-index: 1; /* Unter Regen */
 }
 
 @keyframes moveLine {
@@ -87,6 +86,36 @@
   }
 }
 
+/* Regenanimation */
+.road-container.rain::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 36%;
+  width: 27%;
+  height: 400px;
+  background: repeating-linear-gradient(
+    45deg, /* Diagonale Richtung */
+    transparent,
+    transparent 10px,
+    rgba(0, 123, 255, 0.7) 10px, /* Blaue Streifen */
+    rgba(0, 123, 255, 0.7) 12px
+    
+  );
+  z-index: 2;
+  animation: rainFall 1.50s linear infinite; /* Schnelle diagonale Bewegung */
+  animation-delay: 0.25s;
+}
+
+@keyframes rainFall {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 20px; /* Verschiebt die Streifen diagonal */
+  }
+}
+
 .car {
   width: 50px;
   height: 30px;
@@ -94,6 +123,7 @@
   left: 50%;
   transform: translateX(-50%);
   border-radius: 5px;
+  z-index: 3; /* Über Regen */
 }
 
 .lead-car {
