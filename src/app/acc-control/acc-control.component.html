@@ -5,29 +5,26 @@
     <div class="card-body">
       <h5 class="card-title">ACC Steuerung</h5>
 
-
       <!-- Straßenanimation -->
-      <div class="road-container">
+      <div class="road-container" [class.rain]="simulationData.weatherCondition === 'Rain'">
         <div class="road" [class.active]="isRunning">
           <div id="lead-car" class="car lead-car"></div>
           <div id="ego-car" class="car ego-car"></div>
         </div>
       </div>
 
-      
       <div class="status mb-3" 
-      [class.bg-success]="isDistanceOptimal()" 
-      [class.bg-danger]="isDistanceCritical()" 
-      [class.text-white]="isDistanceOptimal() || isDistanceCritical()">
+           [class.bg-success]="isDistanceOptimal() && !isDistanceRainOptimal()" 
+           [class.bg-danger]="isDistanceCritical()" 
+           [class.bg-primary]="isDistanceRainOptimal()"
+           [class.text-white]="isDistanceOptimal() || isDistanceCritical() || isDistanceRainOptimal()">
         <p><strong>Status:</strong> {{ status }}</p>
         <p><strong>Eigene Geschwindigkeit:</strong> {{ simulationData.egoSpeed | number:'1.1-1' }} km/h</p>
         <p><strong>Vorausfahrende Geschwindigkeit:</strong> {{ simulationData.leadSpeed | number:'1.1-1' }} km/h</p>
         <p><strong>Abstand:</strong> {{ simulationData.distance | number:'1.1-1' }} m</p>
-        <div class = "sim">  
-          <img class = "ico" [src]="'http://openweathermap.org/img/wn/' + simulationData.weatherIcon + '.png'" 
-               alt="Weather Icon" >
-               
-        
+        <div class="sim">  
+          <img class="ico" [src]="'http://openweathermap.org/img/wn/' + simulationData.weatherIcon + '.png'" 
+               alt="Weather Icon">
           <span>{{ simulationData.weatherCondition }}, </span>
           <span>{{ simulationData.temperature | number:'1.1-1' }} °C, </span>
           <span>{{ simulationData.windSpeed | number:'1.1-1' }} m/s, </span>
@@ -41,7 +38,7 @@
         [class.btn-success]="!isRunning" 
         [class.btn-danger]="isRunning"
         (click)="toggleAcc()">
-        {{ isRunning ? 'Simulation Stoppen' : 'Simulation Starten' }}
+        {{ isRunning ? 'ACC Stoppen' : 'ACC Starten' }}
       </button>
       <button 
         class="btn btn-primary ml-2"
@@ -60,6 +57,12 @@
         (click)="toggleWeather()"
         [disabled]="!isRunning">
         Wetter {{ isWeatherOn ? 'aus' : 'an' }}
+      </button>
+      <button 
+        class="btn btn-secondary ml-2"
+        (click)="toggleRain()"
+        [disabled]="!isRunning">
+        Rain
       </button>
     </div>
   </div>

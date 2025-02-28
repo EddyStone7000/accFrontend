@@ -115,15 +115,35 @@ export class AccControlComponent implements OnInit, OnDestroy {
     );
   }
 
+  toggleRain(): void {
+    this.isWeatherOn = true;
+    this.isAdjusting = true;
+    this.simulationData.weatherCondition = "Rain";
+    this.simulationData.weatherIcon = "10d";
+    console.log("Rain aktiviert - Weather: " + this.simulationData.weatherCondition); // Debugging
+    this.accService.toggleWeather(true).subscribe(
+      (data: SimulationData) => {
+        this.simulationData = data;
+        console.log("Nach Backend - Weather: " + this.simulationData.weatherCondition); // Debugging
+        this.updateCarPositions();
+      },
+      error => {
+        this.status = 'Fehler beim Regen';
+        this.adjustmentMessage = 'Fehler';
+        console.error(error);
+      }
+    );
+  }
+
   startSimulation(): void {
     this.simulationSubscription = interval(100)
       .pipe(switchMap(() => this.accService.runSimulation(0.1)))
       .subscribe(
         data => {
           this.simulationData = data;
-          if (this.adjustmentMessage && data.distance >= 6.0 && data.distance <= 7.0 && this.isAdjusting) {
+          if (this.adjustmentMessage && data.distance >= 6.0 && data.distance <= 8.0 && this.isAdjusting && 
+              !(this.isWeatherOn && this.simulationData.weatherCondition === "Rain")) {
             this.adjustmentMessage = 'Abstand stabil gehalten';
-            this.isAdjusting = true; // Bleibt aktiv für dynamische Bewegung
           }
           if (this.isAdjusting) {
             this.updateCarPositions();
@@ -141,11 +161,16 @@ export class AccControlComponent implements OnInit, OnDestroy {
   }
 
   isDistanceOptimal(): boolean {
-    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 7.0; // Grüner Bereich
+    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
   }
 
   isDistanceCritical(): boolean {
-    return this.simulationData && this.simulationData.distance < 4.5 && this.simulationData.distance !== 0;
+    return this.simulationData && this.simulationData.distance < 4.5 && this.simulationData.distance !== 0; // Rot
+  }
+
+  isDistanceRainOptimal(): boolean { // Blau bei Regen, neuer Bereich 15–18 Meter
+    return this.isWeatherOn && this.simulationData.weatherCondition === "Rain" && 
+           this.simulationData.distance >= 15.0 && this.simulationData.distance <= 18.0;
   }
 
   ngOnDestroy(): void {
@@ -166,9 +191,9 @@ export class AccControlComponent implements OnInit, OnDestroy {
     const egoCar = document.getElementById('ego-car');
     if (leadCar && egoCar) {
       const distanceInPixels = this.simulationData.distance * 10;
-      leadCar.style.top = '50px'; // Fix oben
-      egoCar.style.transition = ''; // Keine Animation
-      egoCar.style.top = `${50 + distanceInPixels}px`; // Dynamisch relativ zu lead-car
+      leadCar.style.top = '50px';
+      egoCar.style.transition = '';
+      egoCar.style.top = `${50 + distanceInPixels}px`;
     }
   }
 
@@ -177,7 +202,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
     const egoCar = document.getElementById('ego-car');
     if (leadCar && egoCar) {
       leadCar.style.top = '50px';
-      egoCar.style.top = '300px'; // Fixierte Startposition
+      egoCar.style.top = '300px';
       egoCar.style.transition = '';
     }
   }
