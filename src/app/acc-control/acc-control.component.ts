@@ -142,7 +142,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
       .subscribe(
         data => {
           this.simulationData = data;
-          if (this.adjustmentMessage && data.distance >= 6.0 && data.distance <= 8.0 && this.isAdjusting && 
+          if (this.adjustmentMessage && data.distance >= 5.0 && data.distance <= 8.0 && this.isAdjusting && 
               !this.isRainActive) {
             this.adjustmentMessage = 'Abstand stabil gehalten';
           }
