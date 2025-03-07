@@ -60,7 +60,7 @@
   height: 200px;
   background-color: white;
   animation: moveLine 0.8s linear infinite;
-  z-index: 1; /* Unter Regen */
+  z-index: 1;
 }
 
 /* Zweite bewegte Straßenlinie */
@@ -74,7 +74,7 @@
   background-color: white;
   animation: moveLine 0.8s linear infinite;
   animation-delay: 0.4s;
-  z-index: 1; /* Unter Regen */
+  z-index: 1;
 }
 
 @keyframes moveLine {
@@ -86,25 +86,48 @@
   }
 }
 
-/* Regenanimation */
-.road-container.rain::before {
+/* Regenanimation innerhalb der Straße */
+.road.active.rain {
+  position: relative;
+}
+
+/* Erste Regenlinie */
+.road.active.rain .rain-layer::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 36%;
-  width: 27%;
+  left: 0;
+  width: 150px; /* Genau die Straßenbreite */
   height: 400px;
   background: repeating-linear-gradient(
-    45deg, /* Diagonale Richtung */
+    -45deg, /* Rechts oben nach links unten */
     transparent,
     transparent 10px,
-    rgba(0, 123, 255, 0.7) 10px, /* Blaue Streifen */
+    rgba(0, 123, 255, 0.7) 10px,
     rgba(0, 123, 255, 0.7) 12px
-    
   );
-  z-index: 2;
-  animation: rainFall 1.50s linear infinite; /* Schnelle diagonale Bewegung */
-  animation-delay: 0.25s;
+  animation: rainFall 2s linear infinite;
+  z-index: 2; /* Über Straßenlinien */
+}
+
+/* Zweite Regenlinie */
+.road.active.rain .rain-layer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 400px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 123, 255, 0.7) 10px,
+    rgba(0, 123, 255, 0.7) 12px
+  );
+  animation: rainFall 2.5s linear infinite;
+  animation-delay: 0.50s;
+  z-index: 2; /* Über Straßenlinien */
 }
 
 @keyframes rainFall {
@@ -112,7 +135,7 @@
     background-position: 0 0;
   }
   100% {
-    background-position: 20px 20px; /* Verschiebt die Streifen diagonal */
+    background-position: -20px 20px; /* Nach links unten */
   }
 }
 

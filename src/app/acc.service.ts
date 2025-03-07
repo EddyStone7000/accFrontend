@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AccService {
-  private apiUrl = 'http://localhost:8080';
+  private apiUrl = 'http://localhost:8080'; // Deine Backend-URL
 
   constructor(private http: HttpClient) { }
 
@@ -29,6 +29,10 @@ export class AccService {
   toggleWeather(active: boolean): Observable<SimulationData> {
     return this.http.get<SimulationData>(`${this.apiUrl}/weatherToggle?active=${active}`);
   }
+
+  toggleRain(rain: boolean): Observable<SimulationData> { // Neue Methode
+    return this.http.get<SimulationData>(`${this.apiUrl}/rain?rain=${rain}`);
+  }
 }
 
 export interface SimulationData {
@@ -39,7 +43,7 @@ export interface SimulationData {
   temperature: number;
   windSpeed: number;
   city: string;
-  weatherIcon: string; // Neues Feld
+  weatherIcon: string;
 }
 
 export interface AdjustmentResult {
