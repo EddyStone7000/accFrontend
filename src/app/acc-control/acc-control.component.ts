@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AccService, SimulationData, AdjustmentResult } from '../acc.service';
-import { interval, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { WebSocketService } from '../websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-acc-control',
@@ -13,32 +13,48 @@ export class AccControlComponent implements OnInit, OnDestroy {
   isRunning: boolean = false;
   isWeatherOn: boolean = false;
   isAdjusting: boolean = false;
-  isRainActive: boolean = false; // Steuert Regen-Simulation und Animation
-  simulationData: SimulationData = { 
-    egoSpeed: 0, 
-    leadSpeed: 0, 
-    distance: 0, 
-    weatherCondition: 'Clear', 
-    temperature: 0, 
-    windSpeed: 0, 
-    city: 'Berlin', 
+  isRainActive: boolean = false;
+  simulationData: SimulationData = {
+    egoSpeed: 0,
+    leadSpeed: 0,
+    distance: 0,
+    weatherCondition: 'Clear',
+    temperature: 0,
+    windSpeed: 0,
+    city: 'Berlin',
     weatherIcon: '01d'
   };
   adjustmentMessage: string = '';
-  private simulationSubscription?: Subscription;
+  private webSocketSubscription?: Subscription;
 
-  constructor(private accService: AccService) { }
+  constructor(private accService: AccService, private webSocketService: WebSocketService) {}
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.webSocketSubscription = this.webSocketService.getSimulationData().subscribe(
+      (data: SimulationData) => {
+        this.simulationData = data;
+        if (this.isAdjusting) {
+          this.updateCarPositions();
+        }
+      },
+      error => {
+        this.status = 'Fehler in der WebSocket-Verbindung';
+        console.error(error);
+      }
+    );
+  }
 
   toggleAcc(): void {
     if (!this.isRunning) {
       this.status = 'Simulation läuft';
       this.isRunning = true;
-      this.isAdjusting = false;
-      this.adjustmentMessage = '';
-      this.startSimulation();
-      this.resetCarPositions();
+      this.accService.runSimulation(0.1).subscribe(
+        (data: SimulationData) => {
+          this.simulationData = data; // Initiale Daten von HTTP
+          this.resetCarPositions();
+        },
+        error => console.error('Fehler beim Starten der Simulation:', error)
+      );
     } else {
       this.accService.stopAndReset().subscribe(
         (data: SimulationData) => {
@@ -46,15 +62,11 @@ export class AccControlComponent implements OnInit, OnDestroy {
           this.status = 'Simulation ist aus';
           this.isRunning = false;
           this.isAdjusting = false;
-          this.isRainActive = false; // Regen wird ausgeschaltet
+          this.isRainActive = false;
           this.adjustmentMessage = '';
-          this.stopSimulation();
           this.resetCarPositions();
         },
-        error => {
-          this.status = 'Fehler beim Stoppen';
-          console.error(error);
-        }
+        error => console.error('Fehler beim Stoppen der Simulation:', error)
       );
     }
   }
@@ -62,25 +74,11 @@ export class AccControlComponent implements OnInit, OnDestroy {
   adjustSpeed(): void {
     this.accService.adjustSpeed().subscribe(
       (result: AdjustmentResult) => {
-        this.simulationData = {
-          egoSpeed: result.egoSpeed,
-          leadSpeed: result.leadSpeed,
-          distance: result.distance,
-          weatherCondition: this.simulationData.weatherCondition,
-          temperature: this.simulationData.temperature,
-          windSpeed: this.simulationData.windSpeed,
-          city: this.simulationData.city,
-          weatherIcon: this.simulationData.weatherIcon
-        };
         this.adjustmentMessage = result.action;
         this.isAdjusting = true;
         this.updateCarPositions();
       },
-      error => {
-        this.status = 'Fehler beim Anpassen';
-        this.adjustmentMessage = 'Fehler';
-        console.error(error);
-      }
+      error => console.error('Fehler beim Anpassen der Geschwindigkeit:', error)
     );
   }
 
@@ -91,11 +89,7 @@ export class AccControlComponent implements OnInit, OnDestroy {
         this.adjustmentMessage = 'Starkes Abbremsen ausgelöst';
         this.startBrakingAnimation();
       },
-      error => {
-        this.status = 'Fehler beim Bremsen';
-        this.adjustmentMessage = 'Fehler';
-        console.error(error);
-      }
+      error => console.error('Fehler beim starken Bremsen:', error)
     );
   }
 
@@ -109,72 +103,37 @@ export class AccControlComponent implements OnInit, OnDestroy {
           this.updateCarPositions();
         }
       },
-      error => {
-        this.status = 'Fehler beim Wetter Toggle';
-        this.adjustmentMessage = 'Fehler';
-        console.error(error);
-      }
+      error => console.error('Fehler beim Umschalten des Wetters:', error)
     );
   }
 
   toggleRain(): void {
-    this.isRainActive = !this.isRainActive; // Toggle Regen-Simulation
+    this.isRainActive = !this.isRainActive;
     this.accService.toggleRain(this.isRainActive).subscribe(
       (data: SimulationData) => {
         this.simulationData = data;
         this.adjustmentMessage = this.isRainActive ? 'Regen simuliert' : 'Regen aus';
-        console.log("Rain Active: " + this.isRainActive); // Debugging
         this.updateCarPositions();
       },
-      error => {
-        this.status = 'Fehler beim Regen';
-        this.adjustmentMessage = 'Fehler';
-        console.error(error);
-      }
+      error => console.error('Fehler beim Umschalten des Regens:', error)
     );
   }
 
-
-
-  startSimulation(): void {
-    this.simulationSubscription = interval(100)
-      .pipe(switchMap(() => this.accService.runSimulation(0.1)))
-      .subscribe(
-        data => {
-          this.simulationData = data;
-          if (this.adjustmentMessage && data.distance >= 5.0 && data.distance <= 8.0 && this.isAdjusting && 
-              !this.isRainActive) {
-            this.adjustmentMessage = 'Abstand stabil gehalten';
-          }
-          if (this.isAdjusting) {
-            this.updateCarPositions();
-          }
-        },
-        error => {
-          this.status = 'Fehler in der Simulation';
-          console.error(error);
-        }
-      );
-  }
-
-  stopSimulation(): void {
-    this.simulationSubscription?.unsubscribe();
+  ngOnDestroy(): void {
+    this.webSocketSubscription?.unsubscribe();
+    this.webSocketService.close();
   }
 
   isDistanceOptimal(): boolean {
-    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 8.0; // Grün ohne Regen
+    return this.simulationData.distance >= 5.0 && this.simulationData.distance <= 8.0;
   }
 
   isDistanceCritical(): boolean {
-    return this.simulationData && this.simulationData.distance < 4.5 && this.simulationData.distance !== 0; // Rot
+    return this.simulationData.distance < 6.0 && this.simulationData.distance !== 0;
   }
 
-  isDistanceRainOptimal(): boolean { // Blau bei Regen-Simulation
-    return this.isRainActive && this.simulationData.distance >= 9.0 && this.simulationData.distance <= 11.0; // 10 Meter ± 1
-  }
-
-  ngOnDestroy(): void {
-    this.stopSimulation();
+  isDistanceRainOptimal(): boolean {
+    return this.isRainActive && this.simulationData.distance >= 9.0 && this.simulationData.distance <= 11.0;
   }
 
   private startBrakingAnimation(): void {
