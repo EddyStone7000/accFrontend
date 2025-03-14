@@ -1,0 +1,18 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+:host {
+  display: flex; /* Root als Flex-Container */
+  flex-direction: column;
+  height: 100vh; /* Volle Bildschirmhöhe */
+}
+
+app-acc-control {
+  flex: 1; /* Nimmt restlichen Platz zwischen Header und Footer */
+  display: flex; /* Wichtig: Macht app-acc-control selbst zum Flex-Container */
+  overflow: hidden;
+}

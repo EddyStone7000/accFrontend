@@ -1,5 +1,16 @@
+<<<<<<< HEAD
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
 body {
   padding: 20px;
 }
+=======
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+body {
+  padding: 0px;
+}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+>>>>>>> 06480e508e54a212211030efa4541b6fc8d887bf

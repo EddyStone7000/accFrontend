@@ -10,8 +10,8 @@ export class AccService {
 
   constructor(private http: HttpClient) { }
 
-  runSimulation(deltaTime: number): Observable<SimulationData> {
-    return this.http.get<SimulationData>(`${this.apiUrl}/run?deltaTime=${deltaTime}`);
+  runSimulation(simulationData: SimulationData): Observable<SimulationData> {
+    return this.http.post<SimulationData>(`${this.apiUrl}/run`, simulationData);
   }
 
   adjustSpeed(): Observable<AdjustmentResult> {
