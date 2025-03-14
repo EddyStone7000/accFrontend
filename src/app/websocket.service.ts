@@ -32,10 +32,10 @@ export class WebSocketService {
       };
 
       this.socket.onmessage = (event) => {
-        console.log('Rohe WebSocket-Daten:', event.data); // Logge die unverarbeiteten Daten
+        // console.log('Rohe WebSocket-Daten:', event.data); // Logge die unverarbeiteten Daten
         try {
             const data: SimulationData = JSON.parse(event.data);
-            console.log('Empfangene WebSocket-Daten:', data);
+            // console.log('Empfangene WebSocket-Daten:', data);
             this.dataSubject.next(data);
         } catch (e) {
             console.error('Fehler beim Parsen der WebSocket-Daten:', e, 'Daten:', event.data);
@@ -68,7 +68,7 @@ export class WebSocketService {
   sendMessage(message: string): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(message);
-      console.log('Nachricht gesendet:', message);
+      
     }
   }
 

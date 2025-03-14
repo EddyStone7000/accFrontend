@@ -1,6 +1,8 @@
+// acc-control.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AccService, SimulationData, AdjustmentResult } from '../acc.service';
 import { WebSocketService } from '../websocket.service';
+import { ExcelDataService, ExcelRow } from '../excel-data.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -26,8 +28,14 @@ export class AccControlComponent implements OnInit, OnDestroy {
   };
   adjustmentMessage: string = '';
   private webSocketSubscription?: Subscription;
+  useExcelData = false;
+  selectedRowIndex: number = -1;
 
-  constructor(private accService: AccService, private webSocketService: WebSocketService) {}
+  constructor(
+    private accService: AccService,
+    private webSocketService: WebSocketService,
+    private excelDataService: ExcelDataService
+  ) {}
 
   ngOnInit(): void {
     this.webSocketSubscription = this.webSocketService.getSimulationData().subscribe(
@@ -44,31 +52,74 @@ export class AccControlComponent implements OnInit, OnDestroy {
     );
   }
 
-  toggleAcc(): void {
-    if (!this.isRunning) {
-      this.status = 'Simulation läuft';
-      this.isRunning = true;
-      this.accService.runSimulation(0.1).subscribe(
+  // acc-control.component.ts (nur toggleAcc geändert)
+toggleAcc(): void {
+  if (!this.isRunning) {
+    this.status = 'Simulation läuft';
+    this.isRunning = true;
+    if (this.useExcelData && this.excelDataService.hasExcelData()) {
+      const currentRow = this.excelDataService.getCurrentRow();
+      if (currentRow && this.selectedRowIndex >= 0) {
+        this.accService.runSimulation(this.simulationData).subscribe(
+          (data: SimulationData) => {
+            this.simulationData = data;
+            this.updateCarPositions();
+            this.status = `Excel-Daten: Zeile ${this.excelDataService.currentIndex.value + 1}`;
+            console.log('Simulation läuft mit ausgewählten Werten:', data);
+          },
+          error => console.error('Fehler beim Starten der Simulation:', error)
+        );
+      } else {
+        let row = this.excelDataService.getCurrentRow();
+        if (!row) {
+          this.excelDataService.nextRow();
+          row = this.excelDataService.getCurrentRow();
+        }
+        if (row) {
+          this.simulationData = {
+            ...this.simulationData,
+            leadSpeed: row.leadSpeed,
+            egoSpeed: row.egoSpeed,
+            distance: row.distance
+          };
+          this.accService.runSimulation(this.simulationData).subscribe(
+            (data: SimulationData) => {
+              this.simulationData = data;
+              this.updateCarPositions();
+              this.status = `Excel-Daten: Zeile ${this.excelDataService.currentIndex.value + 1}`;
+            },
+            error => console.error('Fehler beim Starten mit Excel-Daten:', error)
+          );
+        }
+      }
+    } else {
+      this.accService.runSimulation(this.simulationData).subscribe(
         (data: SimulationData) => {
-          this.simulationData = data; // Initiale Daten von HTTP
+          this.simulationData = data;
           this.resetCarPositions();
         },
         error => console.error('Fehler beim Starten der Simulation:', error)
       );
-    } else {
-      this.accService.stopAndReset().subscribe(
-        (data: SimulationData) => {
-          this.simulationData = data;
-          this.status = 'Simulation ist aus';
-          this.isRunning = false;
-          this.isAdjusting = false;
-          this.isRainActive = false;
-          this.adjustmentMessage = '';
-          this.resetCarPositions();
-        },
-        error => console.error('Fehler beim Stoppen der Simulation:', error)
-      );
     }
+  } else {
+    this.accService.stopAndReset().subscribe(
+      (data: SimulationData) => {
+        this.simulationData = data;
+        this.status = 'Simulation ist aus';
+        this.isRunning = false;
+        this.isAdjusting = false;
+        this.isRainActive = false;
+        this.adjustmentMessage = '';
+        this.resetCarPositions();
+      },
+      error => console.error('Fehler beim Stoppen der Simulation:', error)
+    );
+  }
+}
+
+  selectRow(index: number) {
+    this.selectedRowIndex = index;
+    console.log('Selected Row Index:', this.selectedRowIndex);
   }
 
   adjustSpeed(): void {
@@ -164,5 +215,49 @@ export class AccControlComponent implements OnInit, OnDestroy {
       egoCar.style.top = '300px';
       egoCar.style.transition = '';
     }
+  }
+
+  nextExcelRow() {
+    if (this.useExcelData) {
+      if (this.isRunning) {
+        this.accService.stopAndReset().subscribe(
+          (data: SimulationData) => {
+            this.isRunning = false;
+            this.status = 'Simulation ist aus';
+            this.isAdjusting = false;
+            this.isRainActive = false;
+            this.adjustmentMessage = '';
+            this.loadNextExcelRow();
+          },
+          error => console.error('Fehler beim Stoppen der Simulation:', error)
+        );
+      } else {
+        this.loadNextExcelRow();
+      }
+    }
+  }
+
+  private loadNextExcelRow() {
+    this.excelDataService.nextRow();
+    const row = this.excelDataService.getCurrentRow();
+    if (row) {
+      console.log('Next Excel Row:', row);
+      this.simulationData = {
+        ...this.simulationData,
+        leadSpeed: row.leadSpeed,
+        egoSpeed: row.egoSpeed,
+        distance: row.distance
+      };
+      this.updateCarPositions();
+      this.status = `Excel-Daten: Zeile ${this.excelDataService.currentIndex.value + 1}`;
+      console.log('Excel-Werte übernommen:', row);
+      this.selectedRowIndex = this.excelDataService.currentIndex.value; // Aktualisiere die Auswahl
+    }
+  }
+
+  setExcelData(data: ExcelRow[]) {
+    this.excelDataService.setExcelData(data);
+    this.useExcelData = true;
+    this.selectedRowIndex = -1;
   }
 }

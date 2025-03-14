@@ -1,10 +1,19 @@
-import { Component } from '@angular/core';
+// app.component.ts
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { AccControlComponent } from './acc-control/acc-control.component';
+import { ExcelRow } from './excel-data.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  title = 'acc-frontend';
+export class AppComponent implements OnInit {
+  @ViewChild(AccControlComponent) accControl!: AccControlComponent;
+
+  ngOnInit() {}
+
+  onExcelDataLoaded(excelRows: ExcelRow[]) {
+    this.accControl.setExcelData(excelRows);
+  }
 }

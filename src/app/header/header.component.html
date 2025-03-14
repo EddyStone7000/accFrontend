@@ -1,0 +1,17 @@
+<div class="header-content">
+    <h1>Adaptive Cruise Control</h1>
+    <button mat-icon-button [matMenuTriggerFor]="menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button mat-menu-item (click)="uploadExcel()">
+        <mat-icon>upload_file</mat-icon>
+        <span>Excel File hochladen</span>
+      </button>
+      <button mat-menu-item (click)="saveLogs.emit()">
+        <mat-icon>save</mat-icon>
+        <span>Logs speichern</span>
+      </button>
+    </mat-menu>
+    <input type="file" #fileInput accept=".xlsx" style="display: none;" (change)="onFileSelected($event)">
+  </div>
