@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
-import { HttpClientModule, withFetch } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withFetch } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -22,8 +22,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     AccControlComponent,
     HeaderComponent,
     FooterComponent
-    
   ],
+  
   imports: [
     BrowserModule,
     AppRoutingModule,
@@ -34,7 +34,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     MatMenuModule
   ],
   
-    providers: [AccService, WebSocketService],
+    providers: [AccService, WebSocketService, provideHttpClient()],
     bootstrap: [AppComponent]
     
 
