@@ -4,9 +4,10 @@ import { ExcelDataService, ExcelRow } from '../excel-data.service';
 import * as XLSX from 'xlsx';
 
 @Component({
-  selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css']
+    selector: 'app-header',
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.css'],
+    standalone: false
 })
 export class HeaderComponent {
   @Output() saveLogs = new EventEmitter<void>();

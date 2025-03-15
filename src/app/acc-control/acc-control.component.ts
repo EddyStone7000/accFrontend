@@ -6,9 +6,10 @@ import { ExcelDataService, ExcelRow } from '../excel-data.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-acc-control',
-  templateUrl: './acc-control.component.html',
-  styleUrls: ['./acc-control.component.css']
+    selector: 'app-acc-control',
+    templateUrl: './acc-control.component.html',
+    styleUrls: ['./acc-control.component.css'],
+    standalone: false
 })
 export class AccControlComponent implements OnInit, OnDestroy {
   status: string = 'Simulation ist aus';
